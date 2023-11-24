@@ -1,0 +1,70 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: rcns1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webpod1
+  namespace: rcns1
+  labels:
+    app: webapp1
+spec:
+  containers:
+    - name: webapp1con
+      image: smobinulla/nginxmob:primecare
+      ports:
+      - containerPort: 80
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: websvc1
+  namespace: rcns1
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: webapp1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp1np
+  namespace: rcns1
+spec:
+  type: NodePort
+  selector:
+    app: webapp1
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30032
+
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: webrcapp1
+  namespace: rcns1
+spec:
+  replicas: 3
+  selector:
+    app: webapp1
+  template:
+    metadata:
+      name: webpod1
+      labels:
+        app: webapp1
+    spec:
+      containers:
+        - name: webapp1con
+          image: smobinulla/nginxmob:primecare
+          ports:
+          - containerPort: 80
