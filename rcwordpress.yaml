@@ -1,0 +1,68 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: dev
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dev-pod
+  namespace: dev
+  labels:
+    app: wordpressapp
+spec:
+  containers:
+    - name: wordcon
+      image: wordpress
+      ports:
+      - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpressappsvc
+  namespace: dev
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8081
+    targetPort: 80
+  selector:
+    app: wordpressapp
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpressappnodeport
+  namespace: dev
+spec:
+  type: NodePort
+  selector:
+    app: wordpressapp
+  ports:
+  - port: 8081
+    targetPort: 80
+    nodePort: 30036
+
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: wordpress
+  namespace: dev
+spec:
+  replicas: 3
+  selector:
+    app: wordpressapp
+  template:
+    metadata:
+      labels:
+        app: wordpressapp
+    spec:
+      containers:
+        - name: wordcon
+          image: wordpress
+---
