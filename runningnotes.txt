@@ -1,0 +1,710 @@
+To apply wavenetwork to the Cluster use below command
+
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
+git clone https://github.com/techiescamp/kubeadm-scripts 
+
+to change the label of worker nodes
+
+kubectl label nodes ip-10-232-2-137 node-role.kubernetes.io/worker=worker
+
+
+kubectl get pods ---to check the pods running
+
+kubectl get nodes --to check the nodes runnings
+
+kubectl get all -- to check the cluster
+
+kubectl get svc -o wide --- to check the ports exposed to outside the network
+---------------------------------------------
+below commands to be executed as normal user 
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+ if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+  
+You can now join any number of control-plane nodes by copying certificate authorities
+and service account keys on each node and then running the following as root:
+
+  kubeadm join 54.166.12.237:6443 --token 99qwb4.l6rqhwf57xhp0dfg \
+        --discovery-token-ca-cert-hash sha256:494b7bc145d82109a356b8601f16a4a7e1cc02667ed82c90e26b1c0779b3167f \
+        --control-plane
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 54.166.12.237:6443 --token 99qwb4.l6rqhwf57xhp0dfg \
+        --discovery-token-ca-cert-hash sha256:494b7bc145d82109a356b8601f16a4a7e1cc02667ed82c90e26b1c0779b3167f
+
+
+if you accedentally cleared the screen you can get the token by running below commands
+
+kubeadm token list
+
+kubeadm token create --print-join-command
+
+history | grep 'kubeadm init'
+
+--------------------------------------------------
+
+ 
+
+
+
+iOnce we create a cluster by default below namespaces will be created:
+
+to check the default namespaces
+
+kubectl get namespaces
+
+1. Default
+2. Kube-node-lease
+3. kube-public
+4. kube-system
+
+Once we create a cluster by default below Pods will be created:
+
+kubectl get pods --all-namespaces
+
+kubectl get all -n kube-system
+
+How to create namespaces:
+
+1) using simple commands
+
+kubectl create namespace <namespaceName>
+
+2) By using YML code
+
+vi namesp1.yml
+
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: mynamespace1
+  labels: 
+    name: mynamespace1
+
+kubectl apply -f namesp1.yml
+
+kubectl describe namespace mynamespace1
+
+kubectl get namespace --show-labels              -----------> To check the labels in namespaces
+
+
+Examples of Namespace:
+----
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: dev
+  name: webapp1
+  labels:
+    name: webapp1
+spec:
+  containers:
+  - name: webapp1
+    image: smobinulla/nginxmob:v1
+	ports:
+	- containerPort: 8080
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: qa
+  name: webapp2
+  labels:
+    name: webapp2
+spec:
+  containers:
+  - name: webapp2
+    image: smobinulla/nginxmob:v2
+	ports: 
+	- containerPort: 8081
+------------------------------------------
+
+9/Nov/23
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: qa
+  name: webapp1
+  labels:
+    app: webapp1
+spec:
+  containers:
+  - name: webapp1
+    image: smobinulla/nginxmob:v1
+	ports: 
+	- containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: qa
+  name: webapp1service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetport: 8080
+  selector:
+    app: webapp1
+
+--------------------------------------------
+
+kubectl get ep -------- endpoints
+kubectl describe podname -n namesp1 --------- detailed description of the namespace
+
+kubectl create -f <file.yml> -------------> Creating pod or service
+kubectl update -f <file.yml> -------------> updating pod or service
+kubectl apply -f <file.yml> -------------> applying to same pod or service
+
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: ursa-dev
+    # labels:
+    #app: ursaapp
+--- Above code will create name spaces in kube
+
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: qa
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: qa
+  name: webapp1
+  labels:
+    app: webapp1
+spec:
+  containers:
+  - name: webapp1
+    image: dockerhandson/java-web-app
+    ports:
+    - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: qa
+  name: webapp1svc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: webapp1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: qa
+  name: webapp1np
+spec:
+  type: NodePort
+  selector:
+    app: webapp1
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30032
+---
+
+23/Nov/23
+
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: javans
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: java-pod
+  namespace: javans
+  labels:
+    app: javaapp
+spec:
+  containers:
+    - name: javacontainer
+      image: dockerhandson/java-web-app
+      ports:
+      - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: javasvc
+  namespace: javans
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: javaapp
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: javaappnodeport
+  namespace: javans
+spec:
+  type: NodePort
+  selector:
+    app: javaapp
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30033
+
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: javaapp
+  namespace: javans
+spec:
+  replicas: 5
+  selector:
+    app: javaapp
+  template:
+    metadata:
+      name: java-pod
+      labels:
+        app: javaapp
+    spec:
+      containers:
+        - name: javacontainer
+          image: dockerhandson/java-web-app
+          ports:
+          - containerPort: 8080
+
+----------------
+ubuntu@ip-10-232-2-252:~$ cat main.yml
+
+WordPress
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: dev
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dev-pod
+  namespace: dev
+  labels:
+    app: ursaapp
+spec:
+  containers:
+    - name: ursacontainer
+      image: wordpress
+      ports:
+      - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ursaappsvc
+  namespace: dev
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8081
+    targetPort: 80
+  selector:
+    app: ursaapp
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ursaappnodeport
+  namespace: dev
+spec:
+  type: NodePort
+  selector:
+    app: ursaapp
+  ports:
+  - port: 8081
+    targetPort: 80
+    nodePort: 30032
+
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: wordpress
+  namespace: dev
+spec:
+  replicas: 3
+  selector:
+    app: ursaapp
+  template:
+    metadata:
+      labels:
+        app: ursaapp
+    spec:
+      containers:
+        - name: ursacontainer
+          image: wordpress
+---
+
+todays-commands
+================
+1  cd /tmp/
+    2  ls
+    3  cd latheef/
+    4  ls
+    5  cd manifests/
+    6  cd ..
+    7  cd scripts/
+    8  ls
+    9  vi master.sh
+   10  sudo su
+   11  mkdir -p $HOME/.kube
+   12  kubectl get nodes
+   13  vi main.tf
+   14  cd ~
+   15  pwd
+   16  vi main.tf
+   17  kubectl apply -f main.tf
+   18  vi main.tf
+   19  kubectl apply -f main.tf
+   20  kubectl get pods -n dev
+   21  kubectl get pods -n dev -wide
+   22  kubectl get pods -n dev -o wide
+   23  curl 10.44.0.1
+   24  curl -v 10.44.0.1
+   25  curl -v 10.44.0.1:80
+   26  telnet 10.44.0.1:80
+   27  curl -v 10.44.0.1:80
+   28  kubectl get endpoints -n dev
+   29  kubectl get svc -o wide -n dev
+   30  curl 10.106.2.137:8081
+   31  curl -v 10.106.2.137:8081
+   32  curl -v 10.106.2.137:80
+   33  kubectl get pods -n dev
+   34  kubectl get pods -n dev -o wide
+   35  kubectl get svc -n dev -o wide
+   36  replicon.yml
+   37  vi replicon.yml
+   38  vi main.tf
+   39  kubectl apply -f main.tf
+   40  vi main.tf
+   41  kubectl apply -f main.tf
+   42  vi main.tf
+   43  kubectl apply -f main.tf
+   44  vi main.tf
+   45  kubectl apply -f main.tf
+   46  vi main.tf
+   47  kubectl apply -f main.tf
+   48  vi main.tf
+   49  kubectl apply -f main.tf
+   50  vi main.tf
+   51  kubectl apply -f main.tf
+   52  kubectl get pods -n dev -o wide
+   53  kubectl delete pod wordpress-6bwl9 -n dev
+   54  kubectl get pods -n dev -o wide
+   55  #vi main.tf
+   56  vi main.tf
+   57  vi repcontr.yml
+   58  kubectl apply -f repcontr.yml
+   59  kubectl get pods -n dev -o wide
+   60  vi repcontr.yml
+   61  kubectl get pods -n dev -o wide
+   62  kubectl apply -f repcontr.yml
+   63  kubectl get pods -n dev -o wide
+   64  ls
+   65  pc main.tf javaapp.yml
+   66  cp main.tf javaapp.yml
+   67  ls
+   68  vi javaapp.yml
+   69  kubectl apply -f javaapp.yml
+   70  kubectl get svc -o wide -n javans
+   71  kubectl get pods -n javans
+   72  kubectl get pods -n dev
+   73  vi javaapp.yml
+   74  kubectl get pods -n dev
+   75  kubectl get pods -n javans
+   76  vi javaapp.yml
+   77  kubectl get pods -n javans
+   78  kubectl apply -f javaapp.yml
+   79  kubectl get pods -n javans
+   80  vi javaapp.yml
+   81  kubectl apply -f javaapp.yml
+   82  kubectl get pods -n javans
+   83  vi javarepcontr.yml
+   84  kubectl apply -f javarepcontr.yml
+   85  kuvectl get niodes
+   86  kuvectl get nodes
+   87  kubectl get pods -n javans
+   88  vi javarepcontr.yml
+   89  vi javaapp.yml
+   90  kubectl apply -f javaapp.yml
+   91  kubectl get pods -n javans -o wide
+   92  vi javaapp.yml
+   93  kubectl apply -f javaapp.yml
+   94  kubectl get pods -n javans -o wide
+   95  vi javarepcontr.yml
+   96  kubectl apply -f javarepcontr.yml
+   97  kubectl get pods -n javans -o wide
+   98  vi javaapp.yml
+   99  kubectl apply -f javaapp.yml
+  100  kubectl get pods -n javans -o wide
+  
+24/Nov/23
+
++-------------------------------------------------------+-----------------------------------------------------+
+|                   Replica Set                         |               Replication Controller                |
++-------------------------------------------------------+-----------------------------------------------------+
+| Replica Set supports the new set-based selector.      | Replication Controller only supports equality-based |
+| This gives more flexibility. for eg:                  | selector. for eg:                                   |
+|          environment in (production, qa)              |             environment = production                |
+|  This selects all resources with key equal to         | This selects all resources with key equal to        |
+|  environment and value equal to production or qa      | environment and value equal to production           |
++-------------------------------------------------------+-----------------------------------------------------+
+| rollout command is used for updating the replica set. | rolling-update command is used for updating         |
+| Even though replica set can be used independently,    | the replication controller. This replaces the       |
+| it is best used along with deployments which          | specified replication controller with a new         |
+| makes them declarative.                               | replication controller by updating one pod          |
+|                                                       | at a time to use the new PodTemplate.               |
++-------------------------------------------------------+-----------------------------------------------------+
+
+rc.yml
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: soaktestrc
+spec:
+  replicas: 3
+  selector:
+    app: soaktestrc
+  template:
+    metadata:
+      name: soaktestrc
+      labels:
+        app: soaktestrc
+    spec:
+      containers:
+      - name: soaktestrc
+        image: nickchase/soaktest
+        ports:
+        - containerPort: 80
+
+kubectl create -f rc.yaml
+kubectl describe rc soaktestrc
+kubectl get pods
+kubectl delete rc soaktestrc
+kubectl get pods
+
+replicaset.yml
+
+ apiVersion: apps/v1
+ kind: ReplicaSet
+ metadata:
+   name: soaktestrs
+ spec:
+   replicas: 3
+   selector:
+     matchLabels:
+       app: soaktestrs
+   template:
+     metadata:
+       labels:
+         app: soaktestrs
+         environment: dev
+     spec:
+       containers:
+       - name: soaktestrs
+         image: nickchase/soaktest
+         ports:
+         - containerPort: 80
+---
+spec:
+   replicas: 3
+   selector:
+     matchExpressions:
+      - {key: app, operator: In, values: [soaktestrs, soaktestrs, soaktest]}
+      - {key: teir, operator: NotIn, values: [production]}
+  template:
+     metadata:
+
+---
+
+kubectl create -f replicaset.yaml
+
+kubectl describe rs soaktestrs
+
+kubectl get pods
+
+kubectl delete rs soaktestrs
+
+kubectl get pods
+------------------------------------------------------------------------------------------------  
+kubectl describe node ip-10-232-2-103 | more -----------> To check the Description of the Nodes
+
+Output:
+ 
+Name:               ip-10-232-2-103
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=ip-10-232-2-103
+                    kubernetes.io/os=linux
+Annotations:        kubeadm.alpha.kubernetes.io/cri-socket: unix:///var/run/crio/crio.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Mon, 27 Nov 2023 05:14:44 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  ip-10-232-2-103
+  AcquireTime:     <unset>
+  RenewTime:       Mon, 27 Nov 2023 05:36:49 +0000
+Conditions:
+  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----                 ------  -----------------                 ------------------                ------                       -------
+  NetworkUnavailable   False   Mon, 27 Nov 2023 05:14:58 +0000   Mon, 27 Nov 2023 05:14:58 +0000   WeaveIsUp                    Weave pod has set this
+  MemoryPressure       False   Mon, 27 Nov 2023 05:35:58 +0000   Mon, 27 Nov 2023 05:14:44 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory
+available
+  DiskPressure         False   Mon, 27 Nov 2023 05:35:58 +0000   Mon, 27 Nov 2023 05:14:44 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Mon, 27 Nov 2023 05:35:58 +0000   Mon, 27 Nov 2023 05:14:44 +0000   KubeletHasSufficientPID      kubelet has sufficient PID ava
+ilable
+  Ready                True    Mon, 27 Nov 2023 05:35:58 +0000   Mon, 27 Nov 2023 05:14:44 +0000   KubeletReady                 kubelet is posting ready statu
+s. AppArmor enabled
+
+|More
+--------------------------------------------------------------------------------------------
+kubectl edit rc webrcapp1 -n ns1 -----------------> How to edit the ReplicationController in live
+
+Output:
+
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"ReplicationController","metadata":{"annotations":{},"name":"webrcapp1","namespace":"ns1"},"spec":{"replicas":3,"selector":{"app":"webapp1"},"template":{"metadata":{"labels":{"app":"webapp1"},"name":"webpod1"},"spec":{"containers":[{"image":"smobinulla/nginxmob:primecare","name":"webapp1con","ports":[{"containerPort":80}]}]}}}}
+  creationTimestamp: "2023-11-27T05:25:02Z"
+  generation: 2
+  labels:
+    app: webapp1
+  name: webrcapp1
+  namespace: ns1
+  resourceVersion: "4226"
+  uid: bb2fb87e-c2c8-4b10-8a68-a9d5db015d9a
+spec:
+  replicas: 5
+  selector:
+    app: webapp1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: webapp1
+      name: webpod1
+    spec:
+      containers:
+      - image: smobinulla/nginxmob:primecare
+        imagePullPolicy: IfNotPresent
+        name: webapp1con
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+---------------------------------------------------------------------------------------------------------
+
+~$ kubectl get pod webpod1 -o yaml -n ns1 | more ------> To check the pod in detail in YAML Format
+
+output:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Pod","metadata":{"annotations":{},"labels":{"app":"webapp1"},"name":"webpod1","namespace":"ns1"},"spec":{"containers":[{"imag
+e":"smobinulla/nginxmob:primecare","name":"webapp1con","ports":[{"containerPort":80}]}]}}
+  creationTimestamp: "2023-11-27T05:25:02Z"
+  labels:
+    app: webapp1
+  name: webpod1
+  namespace: ns1
+  ownerReferences:
+  - apiVersion: v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicationController
+    name: webrcapp1
+    uid: bb2fb87e-c2c8-4b10-8a68-a9d5db015d9a
+  resourceVersion: "2089"
+  uid: 428c93a8-06d3-45f0-b3a3-0c69153a2818
+spec:
+  containers:
+  - image: smobinulla/nginxmob:primecare
+    imagePullPolicy: IfNotPresent
+    name: webapp1con
+    ports:
+    - containerPort: 80
+      protocol: TCP
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-qb7dw
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: ip-10-232-2-103
+  preemptionPolicy: PreemptLowerPriority
+
+----------------------------------------------------------------------- 
+
+watch -n 1 kubectl get pods -n ns1  -----------> To check the running pods in respective namespace
+
+sudo kubeadm reset -------------> To reset the Kubernetes Cluster
+
+sudo rm -rf /etc/cni/net.d  ----------> To Remove the kubenetes files
+
+sudo rm /etc/kubernetes/kubelet.conf /etc/kubernetes/pki/ca.crt ----------------> To remove configuration files from kubernetes cluster
+
+-----------------------------------------------------------------------
+
+kubectl get rc -n ns1 ------------> To get the details of ReplicationController
+
+NAME        DESIRED   CURRENT   READY   AGE
+webrcapp1   5         5         5       20m
+
+
+kubectl get pods --show-labels -n ns1 --------> To get the labels of the pods
