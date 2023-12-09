@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: webapp1-deamonset
+spec:
+ selector:
+   matchLabels:
+     app: webapp2
+ template:
+   metadata:
+     name: webapppod
+     labels:
+       app: webapp2
+   spec:
+     containers:
+       - image: smobinulla/nginxmob:v1
+         name: webapp2con
+         ports:
+         - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deamonsetnoddeportsvc
+spec:
+  selector:
+    app: webapp2
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30032

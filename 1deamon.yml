@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: webapp1-deamonset
+spec:
+ selector:
+   matchLabels:
+     app: webapp1
+ template:
+   metadata:
+     name: webapppod
+     labels:
+       app: webapp1
+   spec:
+     containers:
+       - image: smobinulla/nginxmob:v1
+         name: webapp1
+         ports:
+         - containerPort: 80

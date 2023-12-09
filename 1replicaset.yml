@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mobinapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mobinapp
+  template:
+    metadata:
+      name: mobinapp
+      labels:
+        app: mobinapp
+    spec:
+      containers:
+      - image: smobinulla/nginxmob:v1
+        name: mobinapp
+        ports:
+        - containerPort: 80
