@@ -31,10 +31,12 @@ metadata:
   name: webapp1svc
 spec:
   selector:
-    app: webapp1
+    matchLabels:
+      app: webapp1
   type: NodePort
   ports:
   - protocol: TCP
     port: 80
     targetPort: 80
     nodePort: 30033
+---
