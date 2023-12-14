@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp1dep
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: webapp1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  minReadySeconds: 20
+  template:
+    metadata:
+      name: webapp1pod
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - name: webapp1cont
+        image: smobinulla/nginxmob:v1
+        ports:
+          - containerPort: 80

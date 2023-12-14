@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mobin-deployment
+  labels:
+    app: webapp1
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: webapp1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - name: mobinwebapp1
+        image: smobinulla/nginxmob:primecare
+        ports:
+        - containerPort: 80
