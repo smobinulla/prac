@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: readiness
+  labels:
+    app: readiness
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: readiness
+  template:
+    metadata:
+      labels:
+        app: readiness
+    spec:
+      containers:
+        - name: webapp1con
+          image: smobinulla/nginxmob:v1
+          ports:
+          - containerPort: 80
+          readinessProbe:
+            exec:
+              command:
+              - cat
+              - /var/www/html/index.html
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 4
+            failureThreshold: 2
+            successThreshold: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: readinesssvc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: readiness
