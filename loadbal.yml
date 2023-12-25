@@ -59,14 +59,14 @@ spec:
 
 ---
 apiVersion: v1
-  kind: Service
-  metadata:
-    name: webapp1loadbalsvc
-  spec:
-    type: LoadBalancer
-    selector:
-      app: liveness
-    ports:
-      - protocol: TCP
-        port: 80
-        targetPort: 80
+kind: Service
+metadata:
+  name: webapp1loadbalsvc
+spec:
+  type: LoadBalancer
+  selector:
+    app: liveness
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
