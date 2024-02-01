@@ -25,7 +25,7 @@ spec:
           limits:
             cpu: 400m
             memory: "400Mi"
-        requests:
+          requests:
             cpu: 100m
             memory: "100Mi"
 
@@ -64,22 +64,22 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
- name: deamon1
+  name: deamon1
 spec:
- selector:
-   matchLabels:
-     app: webapp1
- template:
-   metadata:
-     name: webapppod
-     labels:
-       app: webapp1
-   spec:
-     containers:
-       - image: grafana/grafana
-         name: grafanacon
-         ports:
-         - containerPort: 3000
+  selector:
+    matchLabels:
+      app: webapp1
+  template:
+    metadata:
+      name: webapppod
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - image: grafana/grafana
+        name: grafanacon
+        ports:
+        - containerPort: 3000
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
