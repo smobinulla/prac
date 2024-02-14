@@ -722,3 +722,623 @@ webrcapp1-drvfv   1/1     Running   0          53m   10.47.0.1   ip-10-232-2-214
 webrcapp1-l98cj   1/1     Running   0          33m   10.44.0.2   ip-10-232-2-121   <none>           <none>            app=webapp1
 
 -----------------------------------------------------------------------------
+
+11/Dec/2023
+Tocreate deployments
+
+ubuntu@ip-10-232-2-186:~/prac$ cat 1depl.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+
+kubectl apply -f 1dep1.yml
+
+Output:
+
+ubuntu@ip-10-232-2-186:~/prac$ kubectl get pods
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-86dcfdf4c6-9r4l4   1/1     Running   0          7s
+nginx-deployment-86dcfdf4c6-jm6zt   1/1     Running   0          7s
+nginx-deployment-86dcfdf4c6-vjkkl   1/1     Running   0          7s
+
+ubuntu@ip-10-232-2-186:~/prac$ kubectl get deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           34s
+ubuntu@ip-10-232-2-186:~/prac$ kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-86dcfdf4c6   3         3         3       57s
+
+
+----------------------------------
+Example 2:
+
+ubuntu@ip-10-232-2-186:~/prac$ cat 2deploy.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mobin-deployment
+  labels:
+    app: webapp1
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: webapp1
+  template:
+    metadata:
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - name: mobinwebapp1
+        image: smobinulla/nginxmob:v1
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mobin-webapp1-service
+  labels:
+    app: webapp1
+spec:
+  selector:
+    app: webapp1
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30033
+---
+
+ubuntu@ip-10-232-2-186:~/prac$ kubectl get deployments
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+mobin-deployment   5/5     5            5           44m
+
+kubectl set image deployment/mobin-deployment mobinwebapp1=smobinulla/nginxmob:v2   ------------> To update the image imperative method here mobinwebapp1 is container name
+
+Output:
+
+deployment.apps/mobin-deployment image updated
+
+ubuntu@ip-10-232-2-186:~/prac$ kubectl rollout history deployment mobin-deployment
+
+Output:
+
+deployment.apps/mobin-deployment
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+------------------------------------------------
+
+ubuntu@ip-10-232-2-186:~/prac$ kubectl rollout undo deployment mobin-deployment --to-revision 1 --------> To undo the changes to revision 1
+Output:
+deployment.apps/mobin-deployment rolled back
+
+-------------------------------------------------
+13-Dec-2023
+
+Example type Recreate
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mobin-deployment
+  labels:
+    app: webapp1
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: webapp1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - name: mobinwebapp1
+        image: smobinulla/nginxmob:v1
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mobin-webapp1-service
+  labels:
+    app: webapp1
+spec:
+  selector:
+    app: webapp1
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30033
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: deamon1
+spec:
+ selector:
+   matchLabels:
+     app: webapp1
+ template:
+   metadata:
+     name: webapppod
+     labels:
+       app: webapp1
+   spec:
+     containers:
+       - image: grafana/grafana
+         name: grafanacon
+         ports:
+         - containerPort: 3000
+---
+output:
+kubectl get pods -o wide
+
+---------------------------------------
+14-Dec-2023
+Deployments using seperate deploymentfile.
+
+vi webapp1:v3.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mobin-deployment
+  labels:
+    app: webapp1
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: webapp1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - name: mobinwebapp1
+        image: smobinulla/nginxmob:primecare
+        ports:
+        - containerPort: 80
+
+kubectl apply -f webapp1:v3.yaml -----------> Here the webapp1 is the app name in the deployment and changing the deploymentimage 
+
+------------------
+Rollingupdate example 1:
+
+ubuntu@ip-10-232-2-79:~/prac$ cat rollingupdate1.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp1dep
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: webapp1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  minReadySeconds: 20
+  template:
+    metadata:
+      name: webapp1pod
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - name: webapp1cont
+        image: smobinulla/nginxmob:v1
+        ports:
+          - containerPort: 80
+
+----------------------------------------
+Rollingupdate example 2:
+
+ubuntu@ip-10-232-2-79:~/prac$ cat rollingupdate2.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp1dep
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: webapp1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  minReadySeconds: 20
+  template:
+    metadata:
+      name: webapp1pod
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - name: webapp1cont
+        image: smobinulla/nginxmob:v1
+        ports:
+          - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp1svc
+spec:
+  selector:
+    matchLabels:
+      app: webapp1
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30033
+
+-----------------------------------
+
+to check the revisions:
+
+ubuntu@ip-10-232-2-79:~/prac$ kubectl rollout history deployments webapp1dep
+deployment.apps/webapp1dep
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+3         <none>
+
+----------------------------------------
+
+To revertback the rollout
+
+Output:
+
+ubuntu@ip-10-232-2-79:~/prac$ kubectl rollout undo deployment webapp1dep --to-revision 1
+deployment.apps/webapp1dep rolled back
+----------------------------------------
+ubuntu@ip-10-232-2-79:~/prac$ cat rollingupdate2.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp1dep
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: webapp1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  minReadySeconds: 20
+  template:
+    metadata:
+      name: webapp1pod
+      labels:
+        app: webapp1
+    spec:
+      containers:
+      - name: webapp1cont
+        image: smobinulla/nginxmob:v1
+        ports:
+          - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp1svc
+spec:
+  selector:
+    matchLabels:
+      app: webapp1
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30033
+---
+ubuntu@ip-10-232-2-79:~/prac$ kubectl get deployments
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+webapp1dep   6/6     6            6           41m
+ubuntu@ip-10-232-2-79:~/prac$ kubectl get deployments -o wide
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS    IMAGES                   SELECTOR
+webapp1dep   6/6     6            6           41m   webapp1cont   smobinulla/nginxmob:v1   app=webapp1
+
+-----------------------------
+18-Dec-2023
+startupProbe example
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: startup-probe
+  labels:
+    app: startup
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: startup
+  template:
+    metadata:
+      labels:
+        app: startup
+    spec:
+      containers:
+        - name: nginx
+          image: lovelearnlinux/webserver:v1
+          ports:
+            - containerPort: 80
+          startupProbe:
+            exec:
+              command:
+              - cat
+              - /var/www/html/index.html
+            initialDelaySeconds: 1
+            periodSeconds: 10
+              # timeoutSeconds: 1
+              #successThreshold: 1
+            failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: startupsvc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: startup
+
+----------------
+KOPS
+----------------
+
+1.DNS name
+2.AWS acoount
+3.route53
+4.we need vpc ubuntu server 20.04
+5.genarate ssh-keys ---------> as root , we need to craete sh keys 
+ ssh-keygen
+after genarate  kops will use this public key and copy to nodes.
+5. Download kops nad kubectl  form github.com/kubarnetes/kops
+   search v1.26.3 copy the kops-linux-amd64 and copy the link and 
+   go to cd /usr/local/bin
+     wget https://github.com/kubernetes/kops/releases/download/v1.26.3/kops-linux-amd64
+	copy envs which is lister bellow and go .bashrc
+    and comedown shitf+g  past here 
+6.aws s3 bucket to save cluster state.
+7.dounload kops and kubectl command
+8. create IAM role and assign to the server.
+9.Edit .bashrc and add all the env variables. 
+export name=mubeentech.xyz
+export KOPS_STATE_STORE=s3://mubeentech.xyz
+export AWS_REGION=us-east-1
+export CLUSTER_NAME=mubeentech.xyz
+alias ku=kubectl
+
+save and exit
+and type source .bashrc or exit and login
+then type env
+
+
+
+dry run
+=======
+     wget https://github.com/kubernetes/kops/releases/download/v1.26.3/kops-linux-amd64
+     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+   
+
+10. kops create cluster --name=kops-cluster-latheef.xyz \
+--state=s3://kops-cluster-latheef.xyz --zones=us-east-2a,us-east-2b,us-east-2c \
+--node-count=3 --master-count=3 --node-size=t2.micro --master-size=t2.medium \
+--master-zones=us-east-2a,us-east-2b,us-east-2c --master-volume-size 10 --node-volume-size 10 \
+--ssh-public-key ~/.ssh/id_rsa.pub \
+--dns-zone=kops-cluster-latheef.xyz --dry-run --output yaml
+===================================================================
+kops create cluster --name=mubeentech.xyz --state=s3://mubeentech.xyz --zones=us-east-1a,us-east-1b,us-east-1c --node-count=3 --master-count=3 --node-size=t2.medium --master-size=t2.medium --master-zones=us-east-1a,us-east-1b,us-east-1c --master-volume-size 10 --node-volume-size 10 --ssh-public-key ~/.ssh/id_rsa.pub --dns-zone=mubeentech.xyz --dry-run --output yaml
+=========================================
+
+after genrate yml copy the cpde and paste to our id visual studio
+
+after our modification we can copy and in masterserver as kops-cluster.yml
+then type execute kops cluter help
+
+11.#kops create -f kops-cluster.yml  
+12   #kops update cluter --name k8sclass.xyz. --yes --admin
+13   # kops validate cluster --wait 10m
+14.  # kops delete -f kops-cluster.yml --yes  >>>> we can delete the cluster..
+
+kops create cluster --name=mubeentech.xyz --state=s3://mubeentech.xyz --zones=us-east-1a,us-east-1b,us-east-1c --node-count=3 --master-count=3 --node-size=t2.medium --master-size=t2.medium --master-zones=us-east-1a,us-east-1b,us-east-1c --master-volume-size 10 --node-volume-size 10 --ssh-public-key ~/.ssh/id_rsa.pub --dns-zone=mubeentech.xyz
+
+kops delete cluster --name=mubeentech.xyz --state=s3://mubeentech.xyz --yes
+
+aftrer this 
+We need to do smoke test
+
+1. check Cluster-info
+     #ku cluster info
+2. check master and nodes
+     #ku get nodes
+3. check namespaces
+4. check mgmt pods kube-system namespace.
+5. Deploy test POD and check the status .
+6. Expose pod in nodeport.
+7. Deploy sample deployment.
+8. Expose deployment with NodePort.
+9. Check service which are exposing POD and and Deployment to Internet.
+10.deletea pod and check if t
+
+# kubectl version --short
+for auto fill commands
+=======================
+echo 'source <(kubectl completion bash)' >>~/.bashrc
+
+echo 'complete -o default -F __start_kubectl ku' >>~/.bashrc
+
+=====================
+
+# ku get nodes --no-headers 
+
+
+kubectl get all -n kube-system
+
+git clone https://github.com/MithunTechnologiesDevOps/kubernetes-ingress.git
+git clone https://github.com/smobinulla/con1.git
+git clone https://github.com/smobinulla/prac.git
+
+
+cd kubernetes-ingress/deployments
+
+kubectl apply -f common/ns-and-sa.yaml
+
+kubectl apply -f common/
+
+kubectl apply -f daemon-set/nginx-ingress.yaml
+
+
+Certificates
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out mubeentech-ingress-tls.crt -keyout mubeentech-tls.key -subj "/CN=webapp1.mubeentech.xyz/O=mubeentech-tls"
+
+kubectl create secret tls mubeentech-ingress-tls --namespace default --key mubeentech-ingress-tls.key --cert mubeentech-ingress-tls.crt
+
+ubuntu@i-09970e16aae5a6596:~/cert1$ cat mubeentechtls.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mubeentechingressrule
+  namespace: nginx-ingress
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - mubeentech.xyz
+    secretName: mubeentech-ingress-tls
+  rules:
+  - host: mubeentech.xyz
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: webapp1svc
+            port:
+              number: 80
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: webapp2svc
+            port:
+              number: 80
+
+
+https://github.com/MithunTechnologiesDevOps/metrics-server.git
+
+
+kubectl get all -n kube-system ----------> To check the kubesystem all pods and svcs together 
+
+31/Jan/24
+
+create kubens 
+
+git clone https://github.com/ahmetb/kubectx.git ~/.kubectx
+
+snap install kubectx --classic
+
+kubens kube-system
+
+kubens default
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+(or)
+
+create component.yml file
+
+kubectl apply -f component.yml
+
+kubectl get pods -n kube-system --------> to see whether metrics server is up and running or not
+
+kubectl top nodes ----------------------> To see the nodes
+
+
+kubectl api-resources | grep -i autoscaling
+
+kubectl create ns hpa
+
+kubens hpa
+
+  vi hpa.yml
+  
+  kubectl get ns
+  
+  kubectl apply -f hpa.yml
+  
+  kubectl top pods
+  
+  kubectl top nodes
+  
+  kubectl top pods
+ 
+  duplicate the session and run the below command to watch the running status of the kubectl replicas
+ 
+ watch -n 1 kubectl get hpa 
+ 
+ go inside the pod 
+
+ kubectl exec -it hpa-deploy-cd78b9f-l2rx6 -- bash
+ 
+ watch the session in duplicate session
+
+output
+ 
+root@hpa-deploy-cd78b9f-l2rx6:/# stress --cpu 8 --io 4 --vm 2 --vm-bytes 128M --timeout 10s
+stress: info: [47] dispatching hogs: 8 cpu, 4 io, 2 vm, 0 hdd
+stress: info: [47] successful run completed in 10s
+
+
+observe the horizontal pods increase and decrease accordingly.
