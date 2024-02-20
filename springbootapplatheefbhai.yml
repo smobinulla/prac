@@ -3,61 +3,62 @@ kind: Deployment
 metadata:
   name: springappdeployment
 spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: springapp
-  template:
-    metadata:
-      name: springapppod
-      labels:
-        app: springapp
-    spec:
+ replicas: 2
+ selector:
+   matchLabels:
+     app: springapp
+ template:
+   metadata:
+     name: springapppod
+     labels:
+       app: springapp
+   spec:
       containers:
       - name: springappcontainer
         image: dockerhandson/spring-boot-mongo
         ports:
         - containerPort: 8080
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
         env:
-        - name: MONGO_DB_USERNAME
-          value: devdb
-        - name: MONDGO_DB_PASSWORD
-          value: devdb@123
         - name: MONGO_DB_HOSTNAME
           value: mongo
+        - name: MONGO_DB_USERNAME
+          value: devdb
+        - name: MONGO_DB_PASSWORD
+          value: devdb@123
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: springbootlb
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: springappsvc
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: springapp
   ports:
-  - protocol: TCP
-    port: 80
+  - port: 80
     targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
-  name: mongodbrs
+  name: mognodbrs
 spec:
   selector:
     matchLabels:
-      app: mongodb
+      app: mongo
   template:
     metadata:
-      name: mongodbpodls
+      name: mongodbpod
       labels:
-        app: mongodb
+        app: mongo
     spec:
-      volumeMounts:
-      - name: mongodbhostpath
-        mountPath: /data/db
       containers:
       - name: mongodbcontainer
         image: mongo
@@ -68,8 +69,11 @@ spec:
           value: devdb
         - name: MONGO_INITDB_ROOT_PASSWORD
           value: devdb@123
+        volumeMounts:
+        - name: mongodbhostpath
+          mountPath: /data/db
       volumes:
-      - name: nfs-vol1
+      - name: mongodbhostpath
         nfs:
           server: 18.212.4.11
           path: /mnt/nfs_share
@@ -77,11 +81,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodbservice
+  name: mongo
 spec:
   type: ClusterIP
-  selector: 
-    app: mongodb
+  selector:
+    app: mongo
   ports:
   - port: 27017
-    targetPort: 27017
+    targetPort: 27017

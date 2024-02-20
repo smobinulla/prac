@@ -80,8 +80,9 @@ metadata:
   name: mongodbservice
 spec:
   type: ClusterIP
-  selector: 
+  selector:
     app: mongodb
   ports:
   - port: 27017
     targetPort: 27017
+
