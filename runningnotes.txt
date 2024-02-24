@@ -1150,7 +1150,7 @@ after genarate  kops will use this public key and copy to nodes.
     and comedown shitf+g  past here 
 6.aws s3 bucket to save cluster state.
 7.dounload kops and kubectl command
-8. create IAM role and assign to the server.
+8. create IAM role and assign to the server. In IAM we have to grant EC2ADMIN ACCESS, ELB, EKS, S3 FULL ACCESS
 9.Edit .bashrc and add all the env variables. 
 export name=mubeentech.xyz
 export KOPS_STATE_STORE=s3://mubeentech.xyz
