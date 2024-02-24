@@ -14,7 +14,7 @@ spec:
   volumes:
   - name: test-volume
     awsElasticBlockStore:
-      volumeID: vol-0e426d53567aa1049
+      volumeID: vol-0b1ff27cd5b6fe3f3
       fsType: ext4
 ---
 apiVersion: v1
