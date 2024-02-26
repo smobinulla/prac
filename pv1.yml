@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata: 
+  name: aws-pv1
+  labels:
+    type: aws-pv1
+spec:
+  storageClassName: gp3
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  awsElasticBlockStore:
+    volumeID: vol-07718ed60f94084e9
+    fsType: ext4
