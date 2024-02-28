@@ -6,14 +6,14 @@ metadata:
     name: nginx
 spec:
   containers:
-  - image: smobinulla/nginxmob:v1
+  - image: nginx:latest
     name: web-server
     ports:
     - containerPort: 80
       protocol: TCP
     volumeMounts:
     - name: html
-      mountPath: /usr/share/nginx/html
+      mountPath: /usr/share/nginx/
   - name: git-sync
     image: k8s.gcr.io/git-sync:v3.0.1
     volumeMounts:

@@ -8,9 +8,9 @@ spec:
   storageClassName: io1
   persistentVolumeReclaimPolicy: Retain
   capacity:
-    storage: 6Gi
+    storage: 4Gi
   accessModes:
     - ReadOnlyMany
   awsElasticBlockStore:
-    volumeID: vol-0c6b89f5b31b1542a
+    volumeID: vol-006ba9cc446d3e5d9
     fsType: ext4
