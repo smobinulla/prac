@@ -8,9 +8,9 @@ spec:
   storageClassName: gp3
   persistentVolumeReclaimPolicy: Retain
   capacity:
-    storage: 2Gi
+    storage: 3Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   awsElasticBlockStore:
-    volumeID: vol-0a39f2b4114124c27
+    volumeID: vol-0097d2c16c7804d49
     fsType: ext4
