@@ -10,7 +10,7 @@ spec:
   capacity:
     storage: 3Gi
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   awsElasticBlockStore:
-    volumeID: vol-0097d2c16c7804d49
+    volumeID: vol-024f303c0c62c7dd5
     fsType: ext4
