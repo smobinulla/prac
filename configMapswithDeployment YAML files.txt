@@ -1,0 +1,61 @@
+root@ip-10-232-2-53:~/configprac# cat config-map.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |
+    events {
+      worker_connections 1024;
+    }
+
+    http {
+      server {
+        listen 80;
+        server_name mubeentech.xyz;
+        location / {
+          root /usr/share/nginx/html;
+          index index.html;
+        }
+      }
+      server {
+        listen 8090;
+        server_name mubeentech.xyz;
+        location / {
+          root /usr/share/nginx/html;
+          index index.html;
+        }
+
+root@ip-10-232-2-53:~/configprac# cat configdeployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+
+      }
+
+    }
+
